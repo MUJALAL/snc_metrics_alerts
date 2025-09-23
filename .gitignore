@@ -1,0 +1,13 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# OS-specific temporary files
+.DS_Store
+
+# Virtual environment folder
+snc_alert_env/
+
+# Other ignored files
+.env
