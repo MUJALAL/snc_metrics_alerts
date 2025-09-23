@@ -13,6 +13,7 @@ def get_snowflake_connection():
     private_key_path = os.getenv("PRIVATE_KEY_PATH")
     private_key_passphrase = os.getenv("PRIVATE_KEY_PASSPHRASE")
 
+
     with open(private_key_path, "rb") as key_file:
         p_key = serialization.load_pem_private_key(
             key_file.read(),
@@ -35,6 +36,7 @@ def get_snowflake_connection():
         schema=os.getenv("SNOWFLAKE_SCHEMA"),
         role=os.getenv("SNOWFLAKE_ROLE", "ROLE_SUPPO_COMM")  # Default role if not set
     )
+
     return conn
 
 
@@ -264,7 +266,6 @@ FROM alert_cte
 ORDER BY 1,2,3,4
 '''
 
-# print(ALERT_QUERY)
 
 
 start_date = (pd.to_datetime(ALERT_QUERY.dated.unique()[0]) - pd.Timedelta(days=7)).strftime('%Y-%m-%d')
@@ -304,19 +305,21 @@ SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL")
 
 # SLACK_WEBHOOK_URL = 'https://hooks.slack.com/services/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'
 
-# def get_alert_data():
-#     print("Connecting to Snowflake...")
-#     ctx = get_snowflake_connection()
-#     cs = ctx.cursor()
-#     try:
-#         print("Executing query...")
-#         cs.execute(ALERT_QUERY)
-#         rows = cs.fetchall()
-#         print(f"Query result: {rows}")
-#         return rows
-#     finally:
-#         cs.close()
-#         ctx.close()
+def get_alert_data():
+    print("Connecting to Snowflake...")
+    ctx = get_snowflake_connection()
+    cs = ctx.cursor()
+    try:
+        print("Executing query...")
+        cs.execute(ALERT_QUERY)
+        rows = cs.fetchall()
+        print(f"Query result: {rows}")
+        return rows
+    finally:
+        cs.close()
+        ctx.close()
+
+
 
 
 def send_slack_message(payload, webhook_url):
@@ -338,7 +341,8 @@ def send_slack_message(payload, webhook_url):
 def main():
     print("Starting SNC alert script...")
     # Assuming alerts is a DataFrame
-    alerts = ALERT_QUERY  # Replace with your actual data source
+    # alerts = ALERT_QUERY  # Replace with your actual data source
+    alerts = get_alert_data  # Replace with your actual data source
 
     # Prepare the overall Block Kit message payload
     blocks = [
