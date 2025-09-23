@@ -310,7 +310,8 @@ def main():
     print("Starting SNC alert script...")
     # Assuming alerts is a DataFrame
     # alerts = ALERT_QUERY  # Replace with your actual data source
-    alerts = get_alert_data  # Replace with your actual data source
+    
+    alerts = get_alert_data()  # Replace with your actual data source
 
 
     start_date = (pd.to_datetime(alerts.dated.unique()[0]) - pd.Timedelta(days=7)).strftime('%Y-%m-%d')
