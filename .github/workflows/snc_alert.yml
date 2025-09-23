@@ -31,14 +31,14 @@ jobs:
           echo "$SNOWFLAKE_PRIVATE_KEY_B64" | base64 -d > rsa_key.p8
           export PRIVATE_KEY_PATH=$(pwd)/rsa_key.p8
           export PRIVATE_KEY_PASSPHRASE="$SNOWFLAKE_PASSPHRASE"
-          python ptl_script.py
-        working-directory: ./  # Explicitly set if needed
-        env:
-          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
-          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-          SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
-          SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
-          SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
-          SNOWFLAKE_PRIVATE_KEY_B64: ${{ secrets.SNOWFLAKE_PRIVATE_KEY_B64 }}
-          SNOWFLAKE_PASSPHRASE: ${{ secrets.SNOWFLAKE_PASSPHRASE }}
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          python snc_alert.py
+        # working-directory: ./  # Explicitly set if needed
+        # env:
+        #   SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+        #   SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+        #   SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+        #   SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
+        #   SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
+        #   SNOWFLAKE_PRIVATE_KEY_B64: ${{ secrets.SNOWFLAKE_PRIVATE_KEY_B64 }}
+        #   SNOWFLAKE_PASSPHRASE: ${{ secrets.SNOWFLAKE_PASSPHRASE }}
+        #   SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
