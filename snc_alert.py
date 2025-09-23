@@ -313,9 +313,14 @@ def main():
     
     alerts = get_alert_data()  # Replace with your actual data source
 
+    print(alerts)
 
-    start_date = (pd.to_datetime(alerts.dated.unique()[0]) - pd.Timedelta(days=7)).strftime('%Y-%m-%d')
-    end_date = alerts.dated.unique()[0]
+
+    start_date = '2025-09-01'
+    # (pd.to_datetime(alerts.dated.unique()[0]) - pd.Timedelta(days=7)).strftime('%Y-%m-%d')
+    end_date = '2025-09-08'
+    
+    # alerts.dated.unique()[0]
 
 
     # Metabase dashboard links per route_id
