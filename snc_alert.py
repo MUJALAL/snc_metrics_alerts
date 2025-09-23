@@ -270,10 +270,10 @@ ORDER BY 1,2,3,4
 
 
 
-SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL")
+# SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL")
 
 
-# SLACK_WEBHOOK_URL = 'https://hooks.slack.com/services/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'
+SLACK_WEBHOOK_URL = 'https://hooks.slack.com/services/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'
 
 def get_alert_data():
     print("Connecting to Snowflake...")
