@@ -4,6 +4,8 @@ import requests
 import json
 # from metrics_queries import alert_df
 import pandas as pd
+import datetime
+from decimal import Decimal
 
 def get_snowflake_connection():
     """Establish a connection to Snowflake using private key authentication."""
@@ -311,16 +313,17 @@ def main():
     # Assuming alerts is a DataFrame
     # alerts = ALERT_QUERY  # Replace with your actual data source
     
-    alerts = get_alert_data()  # Replace with your actual data source
+    data_list = get_alert_data()  # Replace with your actual data source
 
-    print(alerts)
+    print(data_list)
 
-
-    start_date = '2025-09-01'
-    # (pd.to_datetime(alerts.dated.unique()[0]) - pd.Timedelta(days=7)).strftime('%Y-%m-%d')
-    end_date = '2025-09-08'
     
-    # alerts.dated.unique()[0]
+    columns = ['dated', 'vertical', 'order_type', 'metric_name', 'metric_value', 'metric_threshold']
+
+    alerts = pd.DataFrame(data_list, columns=columns)
+
+    start_date = (pd.to_datetime(alerts.dated.unique()[0]) - pd.Timedelta(days=7)).strftime('%Y-%m-%d')
+    end_date = alerts.dated.unique()[0]
 
 
     # Metabase dashboard links per route_id
