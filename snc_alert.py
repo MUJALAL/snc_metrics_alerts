@@ -268,38 +268,6 @@ ORDER BY 1,2,3,4
 
 
 
-start_date = (pd.to_datetime(ALERT_QUERY.dated.unique()[0]) - pd.Timedelta(days=7)).strftime('%Y-%m-%d')
-end_date = ALERT_QUERY.dated.unique()[0]
-
-
-# Metabase dashboard links per route_id
-METABASE_LINKS = {
-    'spot': 
-        {0:f"https://metabase.prod-internal.porter.in/question/6605-dialed-back-attempted-and-connected?start_date={start_date}&dialer_name=&end_date={end_date}&CALL_TYPE_MODIFIED=&city=&source_type=&vehicle_name=&verticals=spot&request_source=&period=Day&order_status=&vicinity=&call_raisedby=",
-        1:f"https://metabase.prod-internal.porter.in/question/6683-outbound-dialed-tat?dialer_name=&call_type_modified=&end_date={end_date}&city=&source_type=&vehicle_name=&verticals=spot&request_source=&start_date={start_date}&period=Day&order_status=&vicinity=&call_raisedby="
-        },
-    'pfe': 
-        {0:f"https://metabase.prod-internal.porter.in/question/6605-dialed-back-attempted-and-connected?start_date={start_date}&dialer_name=&end_date={end_date}&CALL_TYPE_MODIFIED=&city=&source_type=&vehicle_name=&verticals=pfe&request_source=&period=Day&order_status=&vicinity=&call_raisedby=",
-        1:f"https://metabase.prod-internal.porter.in/question/6683-outbound-dialed-tat?dialer_name=&call_type_modified=&end_date={end_date}&city=&source_type=&vehicle_name=&verticals=pfe&request_source=&start_date={start_date}&period=Day&order_status=&vicinity=&call_raisedby="
-        },
-    'ptl': 
-        {0:f"https://metabase.prod-internal.porter.in/question/6605-dialed-back-attempted-and-connected?start_date={start_date}&dialer_name=&end_date={end_date}&CALL_TYPE_MODIFIED=&city=&source_type=&vehicle_name=&verticals=PTL&request_source=&period=Day&order_status=&vicinity=&call_raisedby=",
-        1:f"https://metabase.prod-internal.porter.in/question/6683-outbound-dialed-tat?dialer_name=&call_type_modified=&end_date={end_date}&city=&source_type=&vehicle_name=&verticals=PTL&request_source=&start_date={start_date}&period=Day&order_status=&vicinity=&call_raisedby="
-        },
-    'pnm': 
-        {0:f"https://metabase.prod-internal.porter.in/question/6605-dialed-back-attempted-and-connected?start_date={start_date}&dialer_name=&end_date={end_date}&CALL_TYPE_MODIFIED=&city=&source_type=&vehicle_name=&verticals=pnm&request_source=&period=Day&order_status=&vicinity=&call_raisedby=",
-        1:f"https://metabase.prod-internal.porter.in/question/6683-outbound-dialed-tat?dialer_name=&call_type_modified=&end_date={end_date}&city=&source_type=&vehicle_name=&verticals=pnm&request_source=&start_date={start_date}&period=Day&order_status=&vicinity=&call_raisedby="
-        },
-    'load-assist': 
-        {0:f"https://metabase.prod-internal.porter.in/question/6605-dialed-back-attempted-and-connected?start_date={start_date}&dialer_name=&end_date={end_date}&CALL_TYPE_MODIFIED=&city=&source_type=&vehicle_name=&verticals=load-assist&request_source=&period=Day&order_status=&vicinity=&call_raisedby=",
-        1:f"https://metabase.prod-internal.porter.in/question/6683-outbound-dialed-tat?dialer_name=&call_type_modified=&end_date={end_date}&city=&source_type=&vehicle_name=&verticals=load-assist&request_source=&start_date={start_date}&period=Day&order_status=&vicinity=&call_raisedby="
-        },
-    'auto-ivr': 
-        {0:f"https://metabase.prod-internal.porter.in/question/6605-dialed-back-attempted-and-connected?start_date={start_date}&dialer_name=&end_date={end_date}&CALL_TYPE_MODIFIED=&city=&source_type=&vehicle_name=&verticals=auto-ivr&request_source=&period=Day&order_status=&vicinity=&call_raisedby=",
-        1:f"https://metabase.prod-internal.porter.in/question/6683-outbound-dialed-tat?dialer_name=&call_type_modified=&end_date={end_date}&city=&source_type=&vehicle_name=&verticals=auto-ivr&request_source=&start_date={start_date}&period=Day&order_status=&vicinity=&call_raisedby="
-        },
-}
-
 SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL")
 
 
@@ -343,6 +311,40 @@ def main():
     # Assuming alerts is a DataFrame
     # alerts = ALERT_QUERY  # Replace with your actual data source
     alerts = get_alert_data  # Replace with your actual data source
+
+
+    start_date = (pd.to_datetime(alerts.dated.unique()[0]) - pd.Timedelta(days=7)).strftime('%Y-%m-%d')
+    end_date = alerts.dated.unique()[0]
+
+
+    # Metabase dashboard links per route_id
+    METABASE_LINKS = {
+        'spot': 
+            {0:f"https://metabase.prod-internal.porter.in/question/6605-dialed-back-attempted-and-connected?start_date={start_date}&dialer_name=&end_date={end_date}&CALL_TYPE_MODIFIED=&city=&source_type=&vehicle_name=&verticals=spot&request_source=&period=Day&order_status=&vicinity=&call_raisedby=",
+            1:f"https://metabase.prod-internal.porter.in/question/6683-outbound-dialed-tat?dialer_name=&call_type_modified=&end_date={end_date}&city=&source_type=&vehicle_name=&verticals=spot&request_source=&start_date={start_date}&period=Day&order_status=&vicinity=&call_raisedby="
+            },
+        'pfe': 
+            {0:f"https://metabase.prod-internal.porter.in/question/6605-dialed-back-attempted-and-connected?start_date={start_date}&dialer_name=&end_date={end_date}&CALL_TYPE_MODIFIED=&city=&source_type=&vehicle_name=&verticals=pfe&request_source=&period=Day&order_status=&vicinity=&call_raisedby=",
+            1:f"https://metabase.prod-internal.porter.in/question/6683-outbound-dialed-tat?dialer_name=&call_type_modified=&end_date={end_date}&city=&source_type=&vehicle_name=&verticals=pfe&request_source=&start_date={start_date}&period=Day&order_status=&vicinity=&call_raisedby="
+            },
+        'ptl': 
+            {0:f"https://metabase.prod-internal.porter.in/question/6605-dialed-back-attempted-and-connected?start_date={start_date}&dialer_name=&end_date={end_date}&CALL_TYPE_MODIFIED=&city=&source_type=&vehicle_name=&verticals=PTL&request_source=&period=Day&order_status=&vicinity=&call_raisedby=",
+            1:f"https://metabase.prod-internal.porter.in/question/6683-outbound-dialed-tat?dialer_name=&call_type_modified=&end_date={end_date}&city=&source_type=&vehicle_name=&verticals=PTL&request_source=&start_date={start_date}&period=Day&order_status=&vicinity=&call_raisedby="
+            },
+        'pnm': 
+            {0:f"https://metabase.prod-internal.porter.in/question/6605-dialed-back-attempted-and-connected?start_date={start_date}&dialer_name=&end_date={end_date}&CALL_TYPE_MODIFIED=&city=&source_type=&vehicle_name=&verticals=pnm&request_source=&period=Day&order_status=&vicinity=&call_raisedby=",
+            1:f"https://metabase.prod-internal.porter.in/question/6683-outbound-dialed-tat?dialer_name=&call_type_modified=&end_date={end_date}&city=&source_type=&vehicle_name=&verticals=pnm&request_source=&start_date={start_date}&period=Day&order_status=&vicinity=&call_raisedby="
+            },
+        'load-assist': 
+            {0:f"https://metabase.prod-internal.porter.in/question/6605-dialed-back-attempted-and-connected?start_date={start_date}&dialer_name=&end_date={end_date}&CALL_TYPE_MODIFIED=&city=&source_type=&vehicle_name=&verticals=load-assist&request_source=&period=Day&order_status=&vicinity=&call_raisedby=",
+            1:f"https://metabase.prod-internal.porter.in/question/6683-outbound-dialed-tat?dialer_name=&call_type_modified=&end_date={end_date}&city=&source_type=&vehicle_name=&verticals=load-assist&request_source=&start_date={start_date}&period=Day&order_status=&vicinity=&call_raisedby="
+            },
+        'auto-ivr': 
+            {0:f"https://metabase.prod-internal.porter.in/question/6605-dialed-back-attempted-and-connected?start_date={start_date}&dialer_name=&end_date={end_date}&CALL_TYPE_MODIFIED=&city=&source_type=&vehicle_name=&verticals=auto-ivr&request_source=&period=Day&order_status=&vicinity=&call_raisedby=",
+            1:f"https://metabase.prod-internal.porter.in/question/6683-outbound-dialed-tat?dialer_name=&call_type_modified=&end_date={end_date}&city=&source_type=&vehicle_name=&verticals=auto-ivr&request_source=&start_date={start_date}&period=Day&order_status=&vicinity=&call_raisedby="
+            },
+    }
+
 
     # Prepare the overall Block Kit message payload
     blocks = [
