@@ -2,7 +2,7 @@ import os
 import snowflake.connector
 import requests
 import json
-from metrics_queries import alert_df
+# from metrics_queries import alert_df
 import pandas as pd
 
 def get_snowflake_connection():
