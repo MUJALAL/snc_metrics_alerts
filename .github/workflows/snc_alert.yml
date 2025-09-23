@@ -2,10 +2,7 @@ name: SNC Alert to Slack
 
 on:
   schedule:
-    # - cron: '*/5 * * * *'  # Runs every 5 minutes
-    - cron: "30 0 * * *"       # 00:30 UTC (start)
-    - cron: "*/5 1-16 * * *"   # Every 5 mins from 01:00 to 16:59 UTC
-
+    - cron: "0 6 * * *"
   workflow_dispatch:       # Allows manual triggering from GitHub UI
 
 jobs:
@@ -31,7 +28,7 @@ jobs:
           echo "$SNOWFLAKE_PRIVATE_KEY_B64" | base64 -d > rsa_key.p8
           export PRIVATE_KEY_PATH=$(pwd)/rsa_key.p8
           export PRIVATE_KEY_PASSPHRASE="$SNOWFLAKE_PASSPHRASE"
-          python snc_alert.py
+          python ptl_script.py
         working-directory: ./  # Explicitly set if needed
         env:
           SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
