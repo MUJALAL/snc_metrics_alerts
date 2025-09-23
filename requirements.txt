@@ -2,3 +2,4 @@ snowflake-connector-python
 cryptography
 requests
 pandas
+datetime
