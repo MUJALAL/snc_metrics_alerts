@@ -28,7 +28,7 @@ jobs:
           echo "$SNOWFLAKE_PRIVATE_KEY_B64" | base64 -d > rsa_key.p8
           export PRIVATE_KEY_PATH=$(pwd)/rsa_key.p8
           export PRIVATE_KEY_PASSPHRASE="$SNOWFLAKE_PASSPHRASE"
-          python ptl_script.py
+          python snc_alert.py
         working-directory: ./  # Explicitly set if needed
         env:
           SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
