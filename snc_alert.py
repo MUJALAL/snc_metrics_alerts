@@ -5,37 +5,37 @@ import json
 from metrics_queries import alert_df
 import pandas as pd
 
-# def get_snowflake_connection():
-#     """Establish a connection to Snowflake using private key authentication."""
-#     from cryptography.hazmat.primitives import serialization
-#     from cryptography.hazmat.backends import default_backend
+def get_snowflake_connection():
+    """Establish a connection to Snowflake using private key authentication."""
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.backends import default_backend
 
-#     private_key_path = os.getenv("PRIVATE_KEY_PATH")
-#     private_key_passphrase = os.getenv("PRIVATE_KEY_PASSPHRASE")
+    private_key_path = os.getenv("PRIVATE_KEY_PATH")
+    private_key_passphrase = os.getenv("PRIVATE_KEY_PASSPHRASE")
 
-#     with open(private_key_path, "rb") as key_file:
-#         p_key = serialization.load_pem_private_key(
-#             key_file.read(),
-#             password=private_key_passphrase.encode() if private_key_passphrase else None,
-#             backend=default_backend()
-#         )
+    with open(private_key_path, "rb") as key_file:
+        p_key = serialization.load_pem_private_key(
+            key_file.read(),
+            password=private_key_passphrase.encode() if private_key_passphrase else None,
+            backend=default_backend()
+        )
 
-#     private_key = p_key.private_bytes(
-#         encoding=serialization.Encoding.DER,
-#         format=serialization.PrivateFormat.PKCS8,
-#         encryption_algorithm=serialization.NoEncryption()
-#     )
+    private_key = p_key.private_bytes(
+        encoding=serialization.Encoding.DER,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption()
+    )
 
-#     conn = snowflake.connector.connect(
-#         user=os.getenv("SNOWFLAKE_USER"),
-#         account=os.getenv("SNOWFLAKE_ACCOUNT"),
-#         private_key=private_key,
-#         warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-#         database=os.getenv("SNOWFLAKE_DATABASE"),
-#         schema=os.getenv("SNOWFLAKE_SCHEMA"),
-#         role=os.getenv("SNOWFLAKE_ROLE", "ROLE_NEW_INI")  # Default role if not set
-#     )
-#     return conn
+    conn = snowflake.connector.connect(
+        user=os.getenv("SNOWFLAKE_USER"),
+        account=os.getenv("SNOWFLAKE_ACCOUNT"),
+        private_key=private_key,
+        warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+        database=os.getenv("SNOWFLAKE_DATABASE"),
+        schema=os.getenv("SNOWFLAKE_SCHEMA"),
+        role=os.getenv("SNOWFLAKE_ROLE", "ROLE_SUPPO_COMM")  # Default role if not set
+    )
+    return conn
 
 
 # owner	slack_id	vertical
@@ -67,11 +67,204 @@ SLACK_TAGS = {
 
 
 
-ALERT_QUERY = alert_df.copy()
+# ALERT_QUERY = alert_df.copy()
 
-print(ALERT_QUERY)
+ALERT_QUERY = '''
+-- DIALED TAT 
 
-ALERT_QUERY
+
+with threshold_cte as (
+SELECT *
+FROM prod_curated.support_communication.outbound_alert_threshold
+)
+
+, dialed_cte as (
+SELECT      
+    dated,
+    lower(vertical) as vertical,
+    lower(order_type) as order_type,
+    sum(total_requests) as total_request,
+    sum(unique_request) as unique_request,
+    sum(unique_requests_dialed) as unique_requests_dialed,
+    sum(unique_requests_attempted) as unique_requests_attempted,
+    sum(unique_requests_connected) as unique_requests_connected,
+    
+    round(100.0*sum(unique_requests_dialed) / sum(unique_request),2) as dialed_pct,
+    round(100.0*sum(unique_requests_attempted) / sum(unique_request),2) as attempted_pct,
+    round(100.0*sum(unique_requests_connected) / sum(unique_request),2) as connected_pct
+    
+FROM prod_eldoria.mart.snc_outbound_dialed
+WHERE dated = current_date - 1
+GROUP BY 1,2,3
+ORDER BY 1,2,3
+)
+
+, tat_cte as (
+SELECT 
+    dated,
+    lower(vertical) as vertical,
+    order_type,
+    
+    case 
+    when dialed_sec > 60 then cast(round((floor(dialed_sec/60)*100 + mod(dialed_sec,60))/100, 2) as float) 
+    when dialed_sec >= 10 then cast(round(dialed_sec/100,2) as float) 
+    when dialed_sec < 10 then cast(round(dialed_sec/100,2) as float) 
+    end as dialed_tat,
+    
+    case 
+    when attempted_sec > 60 then cast(round((floor(attempted_sec/60)*100 + mod(attempted_sec,60))/100, 2) as float) 
+    when attempted_sec >= 10 then cast(round(attempted_sec/100,2) as float) 
+    when attempted_sec < 10 then cast(round(attempted_sec/100,2) as float) 
+    end as attempted_tat,
+    
+    case 
+    when connected_sec > 60 then cast(round((floor(connected_sec/60)*100 + mod(connected_sec,60))/100, 2) as float) 
+    when connected_sec >= 10 then cast(round(connected_sec/100,2) as float) 
+    when connected_sec < 10 then cast(round(connected_sec/100,2) as float) 
+    end as connected_tat,
+    
+    
+FROM(
+SELECT  
+    dated, 
+    vertical,
+    order_type,
+    round(percentile_cont(0.9) within group (order by first_dialed_tat asc)) as dialed_sec,
+    round(percentile_cont(0.9) within group (order by first_attempted_time asc)) as attempted_sec,
+    round(percentile_cont(0.9) within group (order by first_connected_time asc)) as connected_sec
+FROM prod_eldoria.mart.snc_outbound_tat
+WHERE dated = current_date - 1
+GROUP BY 1,2,3
+) cte
+)
+
+
+
+
+, metric_cte as (
+SELECT t1.*, dialed_tat, attempted_tat, connected_tat
+FROM dialed_cte t1
+JOIN tat_cte t2
+ON t1.dated = t2.dated
+and t1.vertical = t2.vertical
+and t1.order_type = t2.order_type
+)
+
+
+
+, final_cte as(
+SELECT t1.*, t2.* exclude(order_type, vertical)
+FROM metric_cte t1
+LEFT JOIN threshold_cte t2
+ON t1.vertical = t2.vertical
+and t1.order_type = t2.order_type
+)
+
+, dialed_pct as (
+SELECT 
+    dated,
+    vertical,
+    order_type,
+    'Dialed %' as metric_name,
+    concat(dialed_pct::varchar, ' %')::varchar as metric_value,
+    dialed_pct_threshold as metric_threshold
+FROM final_cte
+WHERE dialed_pct < dialed_pct_threshold
+)
+
+
+, attempted_pct as (
+SELECT 
+    dated,
+    vertical,
+    order_type,
+    'Attempted %' as metric_name,
+    concat(attempted_pct::varchar, ' %')::varchar as metric_value,
+    attempted_pct_threshold as metric_threshold
+FROM final_cte
+WHERE attempted_pct < attempted_pct_threshold
+)
+
+
+, connected_pct as (
+SELECT 
+    dated,
+    vertical,
+    order_type,
+    'Connected %' as metric_name,
+    concat(connected_pct::varchar, ' %')::varchar as metric_value,
+    connected_pct_threshold as metric_threshold
+FROM final_cte
+WHERE connected_pct < connected_pct_threshold
+)
+
+
+, dialed_tat as (
+SELECT 
+    dated,
+    vertical,
+    order_type,
+    'Dialed Tat' as metric_name,
+    concat(dialed_tat::varchar, ' min')::varchar as metric_value,
+    dialed_tat_threshold as metric_threshold
+FROM final_cte
+WHERE dialed_tat > dialed_tat_threshold
+)
+
+
+, attempted_tat as (
+SELECT 
+    dated,
+    vertical,
+    order_type,
+    'Attempted Tat' as metric_name,
+    concat(attempted_tat::varchar, ' min')::varchar as metric_value,
+    attempted_tat_threshold as metric_threshold
+FROM final_cte
+WHERE attempted_tat > attempted_tat_threshold
+)
+
+
+, connected_tat as (
+SELECT 
+    dated,
+    vertical,
+    order_type,
+    'Connected Tat' as metric_name,
+    concat(connected_tat::varchar, ' min')::varchar as metric_value,
+    connected_tat_threshold as metric_threshold
+FROM final_cte
+WHERE connected_tat > connected_tat_threshold
+)
+
+
+
+, alert_cte as (
+SELECT *
+FROM dialed_pct
+UNION ALL
+SELECT *
+FROM attempted_pct
+UNION ALL
+SELECT *
+FROM connected_pct
+UNION ALL
+SELECT *
+FROM dialed_tat
+UNION ALL
+SELECT *
+FROM attempted_tat
+UNION ALL
+SELECT *
+FROM connected_tat
+)
+
+SELECT *
+FROM alert_cte
+ORDER BY 1,2,3,4
+'''
+
+# print(ALERT_QUERY)
 
 
 start_date = (pd.to_datetime(ALERT_QUERY.dated.unique()[0]) - pd.Timedelta(days=7)).strftime('%Y-%m-%d')
@@ -106,10 +299,10 @@ METABASE_LINKS = {
         },
 }
 
-# SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL")
+SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL")
 
 
-SLACK_WEBHOOK_URL = 'https://hooks.slack.com/services/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'
+# SLACK_WEBHOOK_URL = 'https://hooks.slack.com/services/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'
 
 # def get_alert_data():
 #     print("Connecting to Snowflake...")
